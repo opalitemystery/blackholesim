@@ -1,0 +1,18 @@
+# Black Hole Photon Trajectory Simulator
+
+A numerical simulation of photon trajectories near a black hole using general relativity.
+
+## Current Phase
+Phase 1 — Console-based null geodesic solver in Schwarzschild spacetime.
+
+## Core Features
+- Null geodesic integration using an affine parameter
+- Schwarzschild spacetime
+- 2D plane restriction
+- Physically accurate numerical methods
+
+## Planned Extensions
+- Arbitrary photon directions
+- Capture vs escape detection
+- Kerr spacetime
+- Interactive visualization
