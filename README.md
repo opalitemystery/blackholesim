@@ -16,3 +16,5 @@ Phase 1 — Console-based null geodesic solver in Schwarzschild spacetime.
 - Capture vs escape detection
 - Kerr spacetime
 - Interactive visualization
+
+# ALL FILES CURRENTLY EMPTY. I JUST STARTED
