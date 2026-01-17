@@ -7,9 +7,13 @@ Phase 1 — Console-based null geodesic solver in Schwarzschild spacetime.
 
 # First Working Version Now Here!
 This version does all the things mentioned below however there are still some crashes and because of code limitations. However default parameters work and you could still change them within the following constraints:
+
 Mass < 1 WILL CRASH
+
 L > 5 WILL CRASH
+
 E < 1 WILL CRASH
+
 ## Core Features
 - Null geodesic integration using an affine parameter
 - Schwarzschild spacetime
