@@ -5,24 +5,19 @@ A numerical simulation of photon trajectories near a black hole using general re
 ## Current Phase
 Phase 1 — Console-based null geodesic solver in Schwarzschild spacetime.
 
-# First Working Version Now Here!
-This version does all the things mentioned below however there are still some crashes and because of code limitations. However default parameters work and you could still change them within the following constraints:
+# Second Working Version Now Here!
+This version does not have any crashes anymore! (according to my testing at least) I changed basically all of the physics from V1 because it used wrong physics and allowed for impossible conditions that wouldn't actually exist. 
 
-Mass < 1 WILL CRASH
-
-L > 5 WILL CRASH
-
-E < 1 WILL CRASH
 
 ## Core Features
 - Null geodesic integration using an affine parameter
 - Schwarzschild spacetime
 - 2D plane restriction
 - Physically accurate numerical methods
-
-## Planned Extensions
 - Arbitrary photon directions
 - Capture vs escape detection
+
+## Planned Extensions
 - Kerr spacetime
 - Interactive visualization
 
