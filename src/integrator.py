@@ -40,8 +40,8 @@ def integrateGeodesic(geodesicFunc, initialState, blackHoleMass, maxAffineParame
         affineParameter += stepSize
         stepCounter += 1
     else:
-        status = "escaped"  # photon didn’t hit black hole but max lambda reached
+        status = "escaped"  
 
-    finalTime = state[0]  # coordinate time t
+    finalTime = state[0]  
 
     return positions, status, finalTime
