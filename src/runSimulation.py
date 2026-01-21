@@ -2,8 +2,8 @@ from geodesic import geodesicEquations
 from integrator import integrateGeodesic
 import math
 
-SOLAR_MASS_KM = 1.476625  # 1 solar mass = 1.476625 km
-C_KM_S = 299_792.458      # speed of light in km/s
+SOLAR_MASS_KM = 1.476625  
+C_KM_S = 299_792.458      
 
 inputStr = input(
     "Enter values separated by spaces:\n"
@@ -28,13 +28,12 @@ initialStepSize = float(inputs[7])
 outputInterval = int(inputs[8])
 recordTrajectory = inputs[9].lower() == 'y'
 
-# --- Scale inputs according to chosen system ---
-if coordSystem == 'r':  # real units
-    blackHoleMass = rawMass * SOLAR_MASS_KM  # solar mass → km
+if coordSystem == 'r': 
+    blackHoleMass = rawMass * SOLAR_MASS_KM
     initialRadius = rawRadius
-    initialAngle = math.radians(rawAngle)    # degrees → radians
-    c_factor = C_KM_S                         # for time conversion
-elif coordSystem == 'g':  # geometric units
+    initialAngle = math.radians(rawAngle)  
+    c_factor = C_KM_S                         
+elif coordSystem == 'g':  
     blackHoleMass = rawMass
     initialRadius = rawRadius
     initialAngle = rawAngle
@@ -42,22 +41,22 @@ elif coordSystem == 'g':  # geometric units
 else:
     raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
-# --- Compute initial time velocity using null condition ---
+
 lapse = 1 - 2*blackHoleMass/initialRadius
 initialTimeVelocity = math.sqrt(
     (initialRadius**2 * initialAngularVelocity**2 + initialRadialVelocity**2 / lapse) / lapse
 )
 
 initialState = [
-    0.0,                 # t
-    initialRadius,       # r
-    initialAngle,        # phi
-    initialTimeVelocity, # tDot
-    initialRadialVelocity, # rDot
-    initialAngularVelocity # phiDot
+    0.0,                
+    initialRadius,       
+    initialAngle,        
+    initialTimeVelocity, 
+    initialRadialVelocity, 
+    initialAngularVelocity 
 ]
 
-# --- Run integration ---
+
 trajectory, status, finalTime = integrateGeodesic(
     geodesicEquations,
     initialState,
@@ -68,10 +67,10 @@ trajectory, status, finalTime = integrateGeodesic(
     recordTrajectory
 )
 
-# --- Convert time to nanoseconds if real units ---
+
 timeOfFlight = finalTime / c_factor * 1e9 if coordSystem == 'r' else finalTime
 
-# --- Print results ---
+
 if recordTrajectory:
     print("Path output:")
     print(", ".join(f"({x:.5f}, {y:.5f})" for x, y in trajectory))
