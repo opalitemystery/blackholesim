@@ -1,81 +1,84 @@
+from geodesic import geodesicEquations
+from integrator import integrateGeodesic
 import math
 
-from integrator import rk4Step
-from geodesic import geodesicRHS
-from schwarzchild import Mass
+SOLAR_MASS_KM = 1.476625  # 1 solar mass = 1.476625 km
+C_KM_S = 299_792.458      # speed of light in km/s
 
+inputStr = input(
+    "Enter values separated by spaces:\n"
+    "coordinateSystem(Modes: g=geometric, r=real) "
+    "M initialRadius initialAngle initialRadialVelocity initialAngularVelocity "
+    "maxAffineParameter initialStepSize outputInterval pathOutput(y/n)\n"
+    "Example: r 1.0 3.01 0.0 0.0 0.192 50 0.01 50 y\n"
+)
 
+inputs = inputStr.strip().split()
+if len(inputs) != 10:
+    raise ValueError("Expected exactly 10 inputs.")
 
+coordSystem = inputs[0].lower()
+rawMass = float(inputs[1])
+rawRadius = float(inputs[2])
+rawAngle = float(inputs[3])
+initialRadialVelocity = float(inputs[4])
+initialAngularVelocity = float(inputs[5])
+maxAffineParameter = float(inputs[6])
+initialStepSize = float(inputs[7])
+outputInterval = int(inputs[8])
+recordTrajectory = inputs[9].lower() == 'y'
 
-deltaLambda = 0.01        
-maxSteps = 20000          
-captureRadius = 2 * Mass  
-recordStep = 5            
+# --- Scale inputs according to chosen system ---
+if coordSystem == 'r':  # real units
+    blackHoleMass = rawMass * SOLAR_MASS_KM  # solar mass → km
+    initialRadius = rawRadius
+    initialAngle = math.radians(rawAngle)    # degrees → radians
+    c_factor = C_KM_S                         # for time conversion
+elif coordSystem == 'g':  # geometric units
+    blackHoleMass = rawMass
+    initialRadius = rawRadius
+    initialAngle = rawAngle
+    c_factor = 1.0
+else:
+    raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
+# --- Compute initial time velocity using null condition ---
+lapse = 1 - 2*blackHoleMass/initialRadius
+initialTimeVelocity = math.sqrt(
+    (initialRadius**2 * initialAngularVelocity**2 + initialRadialVelocity**2 / lapse) / lapse
+)
 
-
-
-state = [
-    0.0,   
-    10.0,  
-    0.0    
+initialState = [
+    0.0,                 # t
+    initialRadius,       # r
+    initialAngle,        # phi
+    initialTimeVelocity, # tDot
+    initialRadialVelocity, # rDot
+    initialAngularVelocity # phiDot
 ]
 
+# --- Run integration ---
+trajectory, status, finalTime = integrateGeodesic(
+    geodesicEquations,
+    initialState,
+    blackHoleMass,
+    maxAffineParameter,
+    initialStepSize,
+    outputInterval,
+    recordTrajectory
+)
 
-parameters = {
-    "E": 1.0,  
-    "L": 5.0   
-}
+# --- Convert time to nanoseconds if real units ---
+timeOfFlight = finalTime / c_factor * 1e9 if coordSystem == 'r' else finalTime
 
+# --- Print results ---
+if recordTrajectory:
+    print("Path output:")
+    print(", ".join(f"({x:.5f}, {y:.5f})" for x, y in trajectory))
 
-
-trajectory = []
-lambdaValue = 0.0
-status = "ESCAPED"
-
-for step in range(maxSteps):
-
-    t, r, angle = state
-
-
-    if step % recordStep == 0:
-        x = r * math.cos(angle)
-        y = r * math.sin(angle)
-        trajectory.append((x, y))
-
-    if r <= captureRadius:
-        status = "CAPTURED"
-        break
-
-
-    state = rk4Step(
-        geodesicRHS,
-        lambdaValue,
-        state,
-        deltaLambda,
-        parameters
-    )
-
-    lambdaValue += deltaLambda
-
-
-
-
-print("\nSimulation finished")
-print("-------------------")
 print(f"Status: {status}")
-print(f"Final affine parameter λ: {lambdaValue:.4f}")
-
-t, r, angle = state
-x = r * math.cos(angle)
-y = r * math.sin(angle)
-
-print(f"Final position (r, angle): ({r:.6f}, {angle:.6f})")
-print(f"Final position (x, y): ({x:.6f}, {y:.6f})")
-
-
-trajectoryStr = "[" + ",".join(f"({x},{y})" for x, y in trajectory) + "]"
-
-print("\nPhoton trajectory:")
-print(trajectoryStr)
-
+lastX, lastY = trajectory[-1] if trajectory else (initialRadius*math.cos(initialAngle), initialRadius*math.sin(initialAngle))
+unitLabel = "km" if coordSystem == 'r' else "geometric units"
+print(f"Last observed coordinates ({unitLabel}): ({lastX:.5f}, {lastY:.5f})")
+timeLabel = "ns" if coordSystem == 'r' else "geometric units"
+print(f"Time of flight ({timeLabel}): {timeOfFlight:.5f}")
