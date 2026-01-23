@@ -1,6 +1,15 @@
 import math
 
-def integrateGeodesic(geodesicFunc, initialState, blackHoleMass, maxAffineParameter, initialStepSize=0.01, outputInterval=10, recordTrajectory=True):
+def integrateGeodesic(
+    geodesicFunc,
+    initialState,
+    blackHoleMass,
+    maxAffineParameter,
+    initialStepSize=0.01,
+    outputInterval=10,
+    recordTrajectory=True,
+    plotCallback=None
+):
     state = initialState[:]
     affineParameter = 0.0
     stepSize = initialStepSize
@@ -21,6 +30,8 @@ def integrateGeodesic(geodesicFunc, initialState, blackHoleMass, maxAffineParame
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
             positions.append((x, y))
+            if plotCallback:
+                plotCallback(x, y)
 
         k1 = geodesicFunc(state, blackHoleMass)
         k2 = geodesicFunc([s + 0.5*stepSize*dk for s, dk in zip(state, k1)], blackHoleMass)
@@ -40,8 +51,8 @@ def integrateGeodesic(geodesicFunc, initialState, blackHoleMass, maxAffineParame
         affineParameter += stepSize
         stepCounter += 1
     else:
-        status = "escaped"  # photon didn’t hit black hole but max lambda reached
+        status = "escaped"
 
-    finalTime = state[0]  # coordinate time t
+    finalTime = state[0]
 
     return positions, status, finalTime

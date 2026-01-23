@@ -1,63 +1,83 @@
 from geodesic import geodesicEquations
 from integrator import integrateGeodesic
 import math
+import matplotlib.pyplot as plt
 
-SOLAR_MASS_KM = 1.476625  # 1 solar mass = 1.476625 km
-C_KM_S = 299_792.458      # speed of light in km/s
+SOLAR_MASS_KM = 1.476625
+C_KM_S = 299_792.458
 
 inputStr = input(
     "Enter values separated by spaces:\n"
-    "coordinateSystem(Modes: g=geometric, r=real) "
-    "M initialRadius initialAngle initialRadialVelocity initialAngularVelocity "
+    "coordinateSystem(g=geometric, r=real) "
+    "M initialRadius initialAngle emissionAngleFraction "
     "maxAffineParameter initialStepSize outputInterval pathOutput(y/n)\n"
-    "Example: r 1.0 3.01 0.0 0.0 0.192 50 0.01 50 y\n"
+    "Example: g 1.0 6.0 0.0 0.5 50 0.01 50 y\n"
 )
 
 inputs = inputStr.strip().split()
-if len(inputs) != 10:
-    raise ValueError("Expected exactly 10 inputs.")
+if len(inputs) != 9:
+    raise ValueError("Expected exactly 9 inputs.")
 
 coordSystem = inputs[0].lower()
 rawMass = float(inputs[1])
-rawRadius = float(inputs[2])
-rawAngle = float(inputs[3])
-initialRadialVelocity = float(inputs[4])
-initialAngularVelocity = float(inputs[5])
-maxAffineParameter = float(inputs[6])
-initialStepSize = float(inputs[7])
-outputInterval = int(inputs[8])
-recordTrajectory = inputs[9].lower() == 'y'
+initialRadius = float(inputs[2])
+initialAngle = float(inputs[3])
+emissionAngleFraction = float(inputs[4])
+maxAffineParameter = float(inputs[5])
+initialStepSize = float(inputs[6])
+outputInterval = int(inputs[7])
+recordTrajectory = inputs[8].lower() == 'y'
 
-# --- Scale inputs according to chosen system ---
-if coordSystem == 'r':  # real units
-    blackHoleMass = rawMass * SOLAR_MASS_KM  # solar mass → km
-    initialRadius = rawRadius
-    initialAngle = math.radians(rawAngle)    # degrees → radians
-    c_factor = C_KM_S                         # for time conversion
-elif coordSystem == 'g':  # geometric units
+if coordSystem == 'r':
+    blackHoleMass = rawMass * SOLAR_MASS_KM
+    initialAngle = math.radians(initialAngle)
+    cFactor = C_KM_S
+elif coordSystem == 'g':
     blackHoleMass = rawMass
-    initialRadius = rawRadius
-    initialAngle = rawAngle
-    c_factor = 1.0
+    cFactor = 1.0
 else:
     raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
-# --- Compute initial time velocity using null condition ---
-lapse = 1 - 2*blackHoleMass/initialRadius
-initialTimeVelocity = math.sqrt(
-    (initialRadius**2 * initialAngularVelocity**2 + initialRadialVelocity**2 / lapse) / lapse
-)
+emissionAngle = emissionAngleFraction * math.pi
+lapse = 1 - 2 * blackHoleMass / initialRadius
+
+localTimeComponent = 1.0
+localRadialComponent = math.cos(emissionAngle)
+localAngularComponent = math.sin(emissionAngle)
+
+timeVelocity = localTimeComponent / math.sqrt(lapse)
+radialVelocity = localRadialComponent * math.sqrt(lapse)
+angularVelocity = localAngularComponent / initialRadius
 
 initialState = [
-    0.0,                 # t
-    initialRadius,       # r
-    initialAngle,        # phi
-    initialTimeVelocity, # tDot
-    initialRadialVelocity, # rDot
-    initialAngularVelocity # phiDot
+    0.0,
+    initialRadius,
+    initialAngle,
+    timeVelocity,
+    radialVelocity,
+    angularVelocity
 ]
 
-# --- Run integration ---
+# --- Setup live plot ---
+plt.ion()
+fig, ax = plt.subplots()
+ax.set_aspect('equal')
+ax.set_xlim(-20, 20)
+ax.set_ylim(-20, 20)
+line, = ax.plot([], [], 'b-')
+trailLength = 20  # number of points to keep in trail
+xs, ys = [], []
+
+def plotCallback(x, y):
+    xs.append(x)
+    ys.append(y)
+    if len(xs) > trailLength:
+        xs.pop(0)
+        ys.pop(0)
+    line.set_data(xs, ys)
+    plt.draw()
+    plt.pause(0.001)
+
 trajectory, status, finalTime = integrateGeodesic(
     geodesicEquations,
     initialState,
@@ -65,19 +85,24 @@ trajectory, status, finalTime = integrateGeodesic(
     maxAffineParameter,
     initialStepSize,
     outputInterval,
-    recordTrajectory
+    recordTrajectory,
+    plotCallback=plotCallback
 )
 
-# --- Convert time to nanoseconds if real units ---
-timeOfFlight = finalTime / c_factor * 1e9 if coordSystem == 'r' else finalTime
+timeOfFlight = finalTime / cFactor * 1e9 if coordSystem == 'r' else finalTime
 
-# --- Print results ---
+plt.ioff()
+plt.show()
+
 if recordTrajectory:
     print("Path output:")
     print(", ".join(f"({x:.5f}, {y:.5f})" for x, y in trajectory))
 
 print(f"Status: {status}")
-lastX, lastY = trajectory[-1] if trajectory else (initialRadius*math.cos(initialAngle), initialRadius*math.sin(initialAngle))
+lastX, lastY = trajectory[-1] if trajectory else (
+    initialRadius * math.cos(initialAngle),
+    initialRadius * math.sin(initialAngle)
+)
 unitLabel = "km" if coordSystem == 'r' else "geometric units"
 print(f"Last observed coordinates ({unitLabel}): ({lastX:.5f}, {lastY:.5f})")
 timeLabel = "ns" if coordSystem == 'r' else "geometric units"
