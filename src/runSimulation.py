@@ -3,8 +3,8 @@ from integrator import integrateGeodesic
 import math
 import matplotlib.pyplot as plt
 
-SOLAR_MASS_KM = 1.476625
-C_KM_S = 299_792.458
+SOLAR_MASS_KM = 1.476625  
+C_KM_S = 299_792.458      
 
 inputStr = input(
     "Enter values separated by spaces:\n"
@@ -20,63 +20,41 @@ if len(inputs) != 9:
 
 coordSystem = inputs[0].lower()
 rawMass = float(inputs[1])
-initialRadius = float(inputs[2])
-initialAngle = float(inputs[3])
-emissionAngleFraction = float(inputs[4])
-maxAffineParameter = float(inputs[5])
-initialStepSize = float(inputs[6])
-outputInterval = int(inputs[7])
-recordTrajectory = inputs[8].lower() == 'y'
+rawRadius = float(inputs[2])
+rawAngle = float(inputs[3])
+initialRadialVelocity = float(inputs[4])
+initialAngularVelocity = float(inputs[5])
+maxAffineParameter = float(inputs[6])
+initialStepSize = float(inputs[7])
+outputInterval = int(inputs[8])
+recordTrajectory = inputs[9].lower() == 'y'
 
-if coordSystem == 'r':
+if coordSystem == 'r': 
     blackHoleMass = rawMass * SOLAR_MASS_KM
-    initialAngle = math.radians(initialAngle)
-    cFactor = C_KM_S
-elif coordSystem == 'g':
+    initialRadius = rawRadius
+    initialAngle = math.radians(rawAngle)  
+    c_factor = C_KM_S                         
+elif coordSystem == 'g':  
     blackHoleMass = rawMass
     cFactor = 1.0
 else:
     raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
-emissionAngle = emissionAngleFraction * math.pi
-lapse = 1 - 2 * blackHoleMass / initialRadius
 
-localTimeComponent = 1.0
-localRadialComponent = math.cos(emissionAngle)
-localAngularComponent = math.sin(emissionAngle)
-
-timeVelocity = localTimeComponent / math.sqrt(lapse)
-radialVelocity = localRadialComponent * math.sqrt(lapse)
-angularVelocity = localAngularComponent / initialRadius
+lapse = 1 - 2*blackHoleMass/initialRadius
+initialTimeVelocity = math.sqrt(
+    (initialRadius**2 * initialAngularVelocity**2 + initialRadialVelocity**2 / lapse) / lapse
+)
 
 initialState = [
-    0.0,
-    initialRadius,
-    initialAngle,
-    timeVelocity,
-    radialVelocity,
-    angularVelocity
+    0.0,                
+    initialRadius,       
+    initialAngle,        
+    initialTimeVelocity, 
+    initialRadialVelocity, 
+    initialAngularVelocity 
 ]
 
-# --- Setup live plot ---
-plt.ion()
-fig, ax = plt.subplots()
-ax.set_aspect('equal')
-ax.set_xlim(-20, 20)
-ax.set_ylim(-20, 20)
-line, = ax.plot([], [], 'b-')
-trailLength = 20  # number of points to keep in trail
-xs, ys = [], []
-
-def plotCallback(x, y):
-    xs.append(x)
-    ys.append(y)
-    if len(xs) > trailLength:
-        xs.pop(0)
-        ys.pop(0)
-    line.set_data(xs, ys)
-    plt.draw()
-    plt.pause(0.001)
 
 trajectory, status, finalTime = integrateGeodesic(
     geodesicEquations,
@@ -89,10 +67,9 @@ trajectory, status, finalTime = integrateGeodesic(
     plotCallback=plotCallback
 )
 
-timeOfFlight = finalTime / cFactor * 1e9 if coordSystem == 'r' else finalTime
 
-plt.ioff()
-plt.show()
+timeOfFlight = finalTime / c_factor * 1e9 if coordSystem == 'r' else finalTime
+
 
 if recordTrajectory:
     print("Path output:")

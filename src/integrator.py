@@ -51,8 +51,8 @@ def integrateGeodesic(
         affineParameter += stepSize
         stepCounter += 1
     else:
-        status = "escaped"
+        status = "escaped"  
 
-    finalTime = state[0]
+    finalTime = state[0]  
 
     return positions, status, finalTime
