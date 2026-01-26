@@ -1,21 +1,22 @@
 from geodesic import geodesicEquations
 from integrator import integrateGeodesic
 import math
+import matplotlib.pyplot as plt
 
 SOLAR_MASS_KM = 1.476625  
 C_KM_S = 299_792.458      
 
 inputStr = input(
     "Enter values separated by spaces:\n"
-    "coordinateSystem(Modes: g=geometric, r=real) "
-    "M initialRadius initialAngle initialRadialVelocity initialAngularVelocity "
+    "coordinateSystem(g=geometric, r=real) "
+    "M initialRadius initialAngle emissionAngleFraction "
     "maxAffineParameter initialStepSize outputInterval pathOutput(y/n)\n"
-    "Example: r 1.0 3.01 0.0 0.0 0.192 50 0.01 50 y\n"
+    "Example: g 1.0 6.0 0.0 0.5 50 0.01 50 y\n"
 )
 
 inputs = inputStr.strip().split()
-if len(inputs) != 10:
-    raise ValueError("Expected exactly 10 inputs.")
+if len(inputs) != 9:
+    raise ValueError("Expected exactly 9 inputs.")
 
 coordSystem = inputs[0].lower()
 rawMass = float(inputs[1])
@@ -35,9 +36,7 @@ if coordSystem == 'r':
     c_factor = C_KM_S                         
 elif coordSystem == 'g':  
     blackHoleMass = rawMass
-    initialRadius = rawRadius
-    initialAngle = rawAngle
-    c_factor = 1.0
+    cFactor = 1.0
 else:
     raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
@@ -64,7 +63,8 @@ trajectory, status, finalTime = integrateGeodesic(
     maxAffineParameter,
     initialStepSize,
     outputInterval,
-    recordTrajectory
+    recordTrajectory,
+    plotCallback=plotCallback
 )
 
 
@@ -76,7 +76,10 @@ if recordTrajectory:
     print(", ".join(f"({x:.5f}, {y:.5f})" for x, y in trajectory))
 
 print(f"Status: {status}")
-lastX, lastY = trajectory[-1] if trajectory else (initialRadius*math.cos(initialAngle), initialRadius*math.sin(initialAngle))
+lastX, lastY = trajectory[-1] if trajectory else (
+    initialRadius * math.cos(initialAngle),
+    initialRadius * math.sin(initialAngle)
+)
 unitLabel = "km" if coordSystem == 'r' else "geometric units"
 print(f"Last observed coordinates ({unitLabel}): ({lastX:.5f}, {lastY:.5f})")
 timeLabel = "ns" if coordSystem == 'r' else "geometric units"
