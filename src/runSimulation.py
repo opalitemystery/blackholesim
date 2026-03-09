@@ -1,86 +1,98 @@
 from geodesic import geodesicEquations
 from integrator import integrateGeodesic
 import math
-import matplotlib.pyplot as plt
-
-SOLAR_MASS_KM = 1.476625  
-C_KM_S = 299_792.458      
-
-inputStr = input(
-    "Enter values separated by spaces:\n"
-    "coordinateSystem(g=geometric, r=real) "
-    "M initialRadius initialAngle emissionAngleFraction "
-    "maxAffineParameter initialStepSize outputInterval pathOutput(y/n)\n"
-    "Example: g 1.0 6.0 0.0 0.5 50 0.01 50 y\n"
-)
-
-inputs = inputStr.strip().split()
-if len(inputs) != 9:
-    raise ValueError("Expected exactly 9 inputs.")
-
-coordSystem = inputs[0].lower()
-rawMass = float(inputs[1])
-rawRadius = float(inputs[2])
-rawAngle = float(inputs[3])
-initialRadialVelocity = float(inputs[4])
-initialAngularVelocity = float(inputs[5])
-maxAffineParameter = float(inputs[6])
-initialStepSize = float(inputs[7])
-outputInterval = int(inputs[8])
-recordTrajectory = inputs[9].lower() == 'y'
-
-if coordSystem == 'r': 
-    blackHoleMass = rawMass * SOLAR_MASS_KM
-    initialRadius = rawRadius
-    initialAngle = math.radians(rawAngle)  
-    c_factor = C_KM_S                         
-elif coordSystem == 'g':  
-    blackHoleMass = rawMass
-    cFactor = 1.0
-else:
-    raise ValueError("coordinateSystem must be 'g' or 'r'.")
 
 
-lapse = 1 - 2*blackHoleMass/initialRadius
-initialTimeVelocity = math.sqrt(
-    (initialRadius**2 * initialAngularVelocity**2 + initialRadialVelocity**2 / lapse) / lapse
-)
-
-initialState = [
-    0.0,                
-    initialRadius,       
-    initialAngle,        
-    initialTimeVelocity, 
-    initialRadialVelocity, 
-    initialAngularVelocity 
-]
+def computeNullCondition(M, r0, rDot0, phiDot0):
+    """
+    Compute tDot0 from null geodesic condition.
+    For a photon: g_μν dx^μ dx^ν = 0
+    """
+    factor = 1 - 2 * M / r0
+    tDot0_squared = (rDot0**2 / factor + r0**2 * phiDot0**2) / factor
+    if tDot0_squared < 0:
+        raise ValueError("Invalid initial conditions")
+    return math.sqrt(tDot0_squared)
 
 
-trajectory, status, finalTime = integrateGeodesic(
-    geodesicEquations,
-    initialState,
-    blackHoleMass,
-    maxAffineParameter,
-    initialStepSize,
-    outputInterval,
-    recordTrajectory,
-    plotCallback=plotCallback
-)
+def runSingleSimulation(M, r0, phi0, rDot0, phiDot0, lambdaMax, stepInit, outputEvery):
+    """
+    Run a single photon geodesic simulation.
+    
+    Returns:
+        trajectory: list of {"x": float, "y": float} dicts
+        status: "captured", "escaped", or "lambdaMaxReached"
+    """
+    tDot0 = computeNullCondition(M, r0, rDot0, phiDot0)
+    state0 = [0.0, r0, phi0, tDot0, rDot0, phiDot0]
+    
+    positions, status = integrateGeodesic(
+        geodesicEquations,
+        state0,
+        M,
+        lambdaMax,
+        stepInit,
+        outputEvery
+    )
+    
+    trajectory = [{"x": x, "y": y} for x, y in positions]
+    return trajectory, status
 
 
-timeOfFlight = finalTime / c_factor * 1e9 if coordSystem == 'r' else finalTime
+def runBatchSimulation(M, r0, phi0, rDot0, phiDot0Array, lambdaMax, stepInit, outputEvery):
+    """
+    Run multiple photon geodesic simulations with different angular velocities.
+    
+    Returns:
+        list of dicts with keys: phiDot0, status, trajectory
+    """
+    results = []
+    
+    for phiDot0 in phiDot0Array:
+        try:
+            trajectory, status = runSingleSimulation(
+                M, r0, phi0, rDot0, float(phiDot0), lambdaMax, stepInit, outputEvery
+            )
+            results.append({
+                "phiDot0": float(phiDot0),
+                "status": status,
+                "trajectory": trajectory
+            })
+        except Exception as e:
+            results.append({
+                "phiDot0": float(phiDot0),
+                "error": str(e)
+            })
+    
+    return results
 
 
-if recordTrajectory:
-    print("Path output:")
-    print(", ".join(f"({x:.5f}, {y:.5f})" for x, y in trajectory))
-
-print(f"Status: {status}")
-lastX, lastY = trajectory[-1] if trajectory else (
-    initialRadius * math.cos(initialAngle),
-    initialRadius * math.sin(initialAngle)
-)
-unitLabel = "km" if coordSystem == 'r' else "geometric units"
-print(f"Last observed coordinates ({unitLabel}): ({lastX:.5f}, {lastY:.5f})")
-timeLabel = "ns" if coordSystem == 'r' else "geometric units"
-print(f"Time of flight ({timeLabel}): {timeOfFlight:.5f}")
+# --- Optional: CLI interface for testing ---
+if __name__ == "__main__":
+    inputStr = input(
+        "Enter the following values separated by spaces:\n"
+        "M r0 phi0 rDot0 phiDot0 lambdaMax stepInit outputEvery\n"
+        "Example: 1.0 5.0 0.0 0.0 0.192 100 0.01 10\n"
+    )
+    
+    inputs = inputStr.strip().split()
+    
+    if len(inputs) != 8:
+        raise ValueError("Expected 8 inputs")
+    
+    M = float(inputs[0])
+    r0 = float(inputs[1])
+    phi0 = float(inputs[2])
+    rDot0 = float(inputs[3])
+    phiDot0 = float(inputs[4])
+    lambdaMax = float(inputs[5])
+    stepInit = float(inputs[6])
+    outputEvery = int(inputs[7])
+    
+    trajectory, status = runSingleSimulation(
+        M, r0, phi0, rDot0, phiDot0, lambdaMax, stepInit, outputEvery
+    )
+    
+    print("\nSimulation status:", status)
+    print("Trajectory points:", len(trajectory))
+    print("First few points:", trajectory[:3])

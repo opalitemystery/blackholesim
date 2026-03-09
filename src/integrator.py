@@ -1,58 +1,81 @@
+# integrator.py
+
 import math
 
-def integrateGeodesic(
-    geodesicFunc,
-    initialState,
-    blackHoleMass,
-    maxAffineParameter,
-    initialStepSize=0.01,
-    outputInterval=10,
-    recordTrajectory=True,
-    plotCallback=None
-):
-    state = initialState[:]
-    affineParameter = 0.0
-    stepSize = initialStepSize
+
+def integrateGeodesic(geodesicFunc, state0, M, lambdaMax, stepInit=0.01, outputEvery=10):
+    """
+    Integrates a photon geodesic in Schwarzschild spacetime (equatorial plane).
+
+    Parameters:
+        geodesicFunc : function returning derivatives
+        state0 : initial state [t, r, phi, tDot, rDot, phiDot]
+        M : Schwarzschild mass
+        lambdaMax : maximum affine parameter
+        stepInit : initial step size
+        outputEvery : record position every outputEvery steps
+
+    Returns:
+        positions : list of (x, y) tuples
+        status : 'captured', 'escaped', or 'lambdaMaxReached'
+    """
+
+    state = state0[:]
+    lam = 0.0
+    step = stepInit
+
     positions = []
-    stepCounter = 0
+    stepCount = 0
 
-    while affineParameter < maxAffineParameter:
-        _, radius, angle, timeCoord, _, _ = state
+    while lam < lambdaMax:
 
-        if radius <= 2*blackHoleMass:
-            status = "captured"
-            break
-        if radius > 1e3*blackHoleMass:
-            status = "escaped"
-            break
+        t, r, phi, tDot, rDot, phiDot = state
 
-        if recordTrajectory and stepCounter % outputInterval == 0:
-            x = radius * math.cos(angle)
-            y = radius * math.sin(angle)
+        # --- Capture or escape ---
+        if r <= 2 * M:
+            return positions, "captured"
+
+        if r > 1e3 * M:
+            return positions, "escaped"
+
+        # Record every outputEvery steps
+        if stepCount % outputEvery == 0:
+            x = r * math.cos(phi)
+            y = r * math.sin(phi)
             positions.append((x, y))
-            if plotCallback:
-                plotCallback(x, y)
 
-        k1 = geodesicFunc(state, blackHoleMass)
-        k2 = geodesicFunc([s + 0.5*stepSize*dk for s, dk in zip(state, k1)], blackHoleMass)
-        k3 = geodesicFunc([s + 0.5*stepSize*dk for s, dk in zip(state, k2)], blackHoleMass)
-        k4 = geodesicFunc([s + stepSize*dk for s, dk in zip(state, k3)], blackHoleMass)
+        # --- RK4 step ---
+        k1 = geodesicFunc(state, M)
 
-        state = [
-            s + (stepSize/6)*(k1_i + 2*k2_i + 2*k3_i + k4_i)
+        k2 = geodesicFunc(
+            [s + 0.5 * step * dk for s, dk in zip(state, k1)],
+            M
+        )
+
+        k3 = geodesicFunc(
+            [s + 0.5 * step * dk for s, dk in zip(state, k2)],
+            M
+        )
+
+        k4 = geodesicFunc(
+            [s + step * dk for s, dk in zip(state, k3)],
+            M
+        )
+
+        newState = [
+            s + (step / 6) * (k1_i + 2 * k2_i + 2 * k3_i + k4_i)
             for s, k1_i, k2_i, k3_i, k4_i in zip(state, k1, k2, k3, k4)
         ]
 
-        if radius < 4*blackHoleMass:
-            stepSize = max(0.001, stepSize*0.5)
-        elif radius > 10*blackHoleMass:
-            stepSize = min(0.05, stepSize*1.2)
+        # --- Adaptive step size ---
+        if r < 4 * M:
+            step = max(0.001, step * 0.5)
 
-        affineParameter += stepSize
-        stepCounter += 1
-    else:
-        status = "escaped"  
+        elif r > 10 * M:
+            step = min(0.05, step * 1.2)
 
-    finalTime = state[0]  
+        state = newState
+        lam += step
+        stepCount += 1
 
-    return positions, status, finalTime
+    return positions, "lambdaMaxReached"
