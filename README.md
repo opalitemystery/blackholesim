@@ -16,6 +16,7 @@ This version does not have any crashes anymore! (according to my testing at leas
 - Physically accurate numerical methods
 - Arbitrary photon directions
 - Capture vs escape detection
+- Basic visualization added, not interactive yet, still console input.
 
 ## Planned Extensions
 - Kerr spacetime
