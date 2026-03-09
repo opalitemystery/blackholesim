@@ -213,6 +213,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            width: 165px;
         }
 
         label {
@@ -302,30 +303,6 @@
         body.light-mode button:disabled {
             background: #f0f0f0;
             border-color: #ddd;
-        }
-
-        .batch-btn {
-            background: #2a2a2a;
-            border-color: #444;
-            color: #aaa;
-        }
-
-        body.light-mode .batch-btn {
-            background: #f0f0f0;
-            border-color: #ddd;
-            color: #666;
-        }
-
-        .batch-btn:hover:not(:disabled) {
-            background: #333;
-            border-color: #555;
-            color: #fff;
-        }
-
-        body.light-mode .batch-btn:hover:not(:disabled) {
-            background: #e0e0e0;
-            border-color: #999;
-            color: #1a1a1a;
         }
 
         .control-section {
@@ -418,7 +395,7 @@
     <canvas id="canvas"></canvas>
     <div class="sidebar">
         <div class="header">
-            <div class="site-title">Spacetime Simulator</div>
+            <div class="site-title">Black Hole Simulator</div>
             <div class="title-row">
                 <h1>Black Hole</h1>
                 <div class="top-controls">
@@ -449,12 +426,9 @@
 
         <div class="divider"></div>
 
-        <div class="param-grid" id="paramContainer">
-            <!-- Parameters will be inserted here -->
-        </div>
+        <div class="param-grid" id="paramContainer"> </div>
 
         <button id="simulateBtn">Simulate</button>
-        <button id="batchBtn" class="batch-btn">Batch Simulation (5 rays)</button>
 
         <div class="divider"></div>
 
@@ -479,11 +453,7 @@
             <div style="margin-top: 8px;" id="statusText"></div>
         </div>
 
-        <div class="zoom-hint">
-            🖱️ Scroll to zoom<br>
-            Click & drag to pan<br>
-            Press ⌂ to reset view
-        </div>
+
     </div>
 
     <script>
@@ -493,7 +463,6 @@
         const SCALE_BASE = 30;
         const COLORS = ['#00d4ff', '#39ff14', '#ffff00', '#ffbe0b', '#8338ec', '#fb5607', '#3a86ff', '#06ffa5'];
         
-        // Parameter labels
         const parameterLabels = {
             scientific: {
                 M: 'M',
@@ -541,14 +510,12 @@
         let useScientificTerms = false;
         let useRainbowTrail = true;
         
-        // Pan and zoom
         let panX = 0;
         let panY = 0;
         let zoom = 1;
         let isDragging = false;
         let dragStart = { x: 0, y: 0 };
 
-        // Initialize parameters
         function initializeParameters() {
             const container = document.getElementById('paramContainer');
             container.innerHTML = '';
@@ -565,7 +532,6 @@
             });
         }
 
-        // Resize canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth - 420;
             canvas.height = window.innerHeight;
@@ -574,7 +540,6 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Pan and zoom controls
         canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const zoomSpeed = 0.03;
@@ -586,7 +551,6 @@
             zoom += e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
             zoom = Math.max(0.1, Math.min(zoom, 10));
 
-            // Zoom towards cursor
             const zoomFactor = zoom / oldZoom;
             panX = x - (x - panX) * zoomFactor;
             panY = y - (y - panY) * zoomFactor;
@@ -616,7 +580,6 @@
             isDragging = false;
         });
 
-        // Home button
         document.getElementById('homeBtn').addEventListener('click', () => {
             panX = 0;
             panY = 0;
@@ -624,12 +587,10 @@
             draw();
         });
 
-        // Light/dark mode toggle
         const modeToggle = document.getElementById('modeToggle');
         const modeIcon = document.getElementById('modeIcon');
         modeToggle.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            // Switch between moon and sun SVG
             if (document.body.classList.contains('light-mode')) {
                 modeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
             } else {
@@ -639,21 +600,18 @@
             draw();
         });
 
-        // Scientific terms toggle
         document.getElementById('scientificToggle').addEventListener('click', function() {
             useScientificTerms = !useScientificTerms;
             this.classList.toggle('active');
             initializeParameters();
         });
 
-        // Rainbow trail toggle
         document.getElementById('rainbowToggle').addEventListener('click', function() {
             useRainbowTrail = !useRainbowTrail;
             this.classList.toggle('active');
             if (trajectories.length > 0) draw();
         });
 
-        // Load saved mode
         if (localStorage.getItem('darkMode') === 'false') {
             document.body.classList.add('light-mode');
             modeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
@@ -680,24 +638,20 @@
             const centerY = canvas.height / 2 + panY;
             const SCALE = SCALE_BASE * zoom;
 
-            // Clear
             ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw black hole
             ctx.fillStyle = '#000000';
             ctx.beginPath();
             ctx.arc(centerX, centerY, 2 * SCALE, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw trajectories
             trajectories.forEach((traj, idx) => {
                 if (!traj.trajectory || traj.trajectory.length === 0) return;
 
                 ctx.strokeStyle = COLORS[idx % COLORS.length];
                 ctx.lineWidth = 2;
 
-                // If animation is done, show full path in yellow
                 if (animationComplete) {
                     ctx.strokeStyle = '#ffff00';
                     ctx.beginPath();
@@ -709,7 +663,6 @@
                     });
                     ctx.stroke();
                 } else if (animationEnabled && animationProgress[idx] !== undefined) {
-                    // Draw fading trail during animation
                     const pointsToDraw = Math.floor(traj.trajectory.length * animationProgress[idx]);
 
                     if (pointsToDraw > 0) {
@@ -728,7 +681,6 @@
                             {r: 148, g: 0, b: 211}
                         ];
 
-                        // Draw trail
                         for (let fade = 0; fade <= trailLength; fade++) {
                             const prevIdx = lastIdx - fade;
                             if (prevIdx < 0) continue;
@@ -754,20 +706,17 @@
                             ctx.fill();
                         }
 
-                        // Head glow
                         ctx.fillStyle = COLORS[idx % COLORS.length].replace('#', 'rgba(') + ', 0.3)';
                         ctx.beginPath();
                         ctx.arc(x, y, 8, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Head
                         ctx.fillStyle = COLORS[idx % COLORS.length];
                         ctx.beginPath();
                         ctx.arc(x, y, 5, 0, Math.PI * 2);
                         ctx.fill();
                     }
                 } else {
-                    // Static
                     ctx.beginPath();
                     traj.trajectory.forEach((point, i) => {
                         const x = centerX + point.x * SCALE;
@@ -826,7 +775,6 @@
             if (isLoading) return;
             isLoading = true;
             document.getElementById('simulateBtn').disabled = true;
-            document.getElementById('batchBtn').disabled = true;
 
             try {
                 const params = getParams();
@@ -850,41 +798,6 @@
             } finally {
                 isLoading = false;
                 document.getElementById('simulateBtn').disabled = false;
-                document.getElementById('batchBtn').disabled = false;
-            }
-        }
-
-        async function batchSimulate() {
-            if (isLoading) return;
-            isLoading = true;
-            document.getElementById('simulateBtn').disabled = true;
-            document.getElementById('batchBtn').disabled = true;
-
-            try {
-                const params = getParams();
-                const phiDot0Array = Array.from({length: 5}, (_, i) => 0.15 + i * 0.01);
-                
-                const response = await fetch('http://localhost:5000/api/batch-simulate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...params, phiDot0Array })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    trajectories = data.trajectories;
-                    document.getElementById('trajCount').textContent = trajectories.length;
-                    document.getElementById('statusText').textContent = 'Batch complete';
-                    startAnimation();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            } finally {
-                isLoading = false;
-                document.getElementById('simulateBtn').disabled = false;
-                document.getElementById('batchBtn').disabled = false;
             }
         }
 
@@ -909,7 +822,6 @@
         });
 
         document.getElementById('simulateBtn').addEventListener('click', simulate);
-        document.getElementById('batchBtn').addEventListener('click', batchSimulate);
     </script>
 </body>
 </html>
