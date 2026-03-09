@@ -1,5 +1,3 @@
-# integrator.py
-
 import math
 
 
@@ -31,20 +29,17 @@ def integrateGeodesic(geodesicFunc, state0, M, lambdaMax, stepInit=0.01, outputE
 
         t, r, phi, tDot, rDot, phiDot = state
 
-        # --- Capture or escape ---
         if r <= 2 * M:
             return positions, "captured"
 
         if r > 1e3 * M:
             return positions, "escaped"
 
-        # Record every outputEvery steps
         if stepCount % outputEvery == 0:
             x = r * math.cos(phi)
             y = r * math.sin(phi)
             positions.append((x, y))
 
-        # --- RK4 step ---
         k1 = geodesicFunc(state, M)
 
         k2 = geodesicFunc(
@@ -67,7 +62,6 @@ def integrateGeodesic(geodesicFunc, state0, M, lambdaMax, stepInit=0.01, outputE
             for s, k1_i, k2_i, k3_i, k4_i in zip(state, k1, k2, k3, k4)
         ]
 
-        # --- Adaptive step size ---
         if r < 4 * M:
             step = max(0.001, step * 0.5)
 

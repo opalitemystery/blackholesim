@@ -67,7 +67,6 @@ def runBatchSimulation(M, r0, phi0, rDot0, phiDot0Array, lambdaMax, stepInit, ou
     return results
 
 
-# --- Optional: CLI interface for testing ---
 if __name__ == "__main__":
     inputStr = input(
         "Enter the following values separated by spaces:\n"

@@ -1,5 +1,3 @@
-# geodesic.py
-
 def schwarzschildMetric(r, M):
     """
     Return the Schwarzschild metric tensor
@@ -11,7 +9,7 @@ def schwarzschildMetric(r, M):
     g[0][0] = -(1 - 2 * M / r)
     g[1][1] = 1 / (1 - 2 * M / r)
     g[2][2] = r**2
-    g[3][3] = r**2  # sin^2(π/2) = 1
+    g[3][3] = r**2  
 
     return g
 
