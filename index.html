@@ -6,389 +6,68 @@
     <title>Black Hole Geodesics Simulator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #1a1a1a;
-            color: #e0e0e0;
-            display: flex;
-            height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        body.light-mode {
-            background: #ffffff;
-            color: #1a1a1a;
-        }
-
-        #canvas {
-            flex: 1;
-            display: block;
-            background: #1a1a1a;
-            cursor: grab;
-        }
-
-        body.light-mode #canvas {
-            background: #ffffff;
-        }
-
-        #canvas:active {
-            cursor: grabbing;
-        }
-
-        .sidebar {
-            width: 420px;
-            padding: 30px;
-            background: #0f0f0f;
-            border-left: 1px solid #333;
-            overflow-y: auto;
-            transition: background-color 0.3s ease;
-        }
-
-        body.light-mode .sidebar {
-            background: #f8f8f8;
-            border-left: 1px solid #ddd;
-        }
-
-        .header {
-            margin-bottom: 30px;
-        }
-
-        .site-title {
-            font-size: 14px;
-            font-weight: 500;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-        }
-
-        body.light-mode .site-title {
-            color: #666;
-        }
-
-        .title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-        }
-
-        body.light-mode h1 {
-            color: #1a1a1a;
-        }
-
-        .top-controls {
-            display: flex;
-            gap: 12px;
-        }
-
-        .icon-btn {
-            width: 40px;
-            height: 40px;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-
-        body.light-mode .icon-btn {
-            background: #f0f0f0;
-            border-color: #ddd;
-        }
-
-        .icon-btn:hover {
-            background: #333;
-            transform: scale(1.05);
-        }
-
-        body.light-mode .icon-btn:hover {
-            background: #e0e0e0;
-        }
-
-        .mode-toggle {
-            animation: rotate 0.6s ease;
-        }
-
-        @keyframes rotate {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
-        }
-
-        .divider {
-            height: 1px;
-            background: #333;
-            margin: 24px 0;
-        }
-
-        body.light-mode .divider {
-            background: #ddd;
-        }
-
-        .toggle-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: #1f1f1f;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            transition: all 0.3s ease;
-        }
-
-        body.light-mode .toggle-row {
-            background: #f0f0f0;
-        }
-
-        .toggle-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            color: #aaa;
-        }
-
-        body.light-mode .toggle-label {
-            color: #666;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            background: #333;
-            border-radius: 12px;
-            cursor: pointer;
-            border: 1px solid #555;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: #444;
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: #888;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: left 0.3s ease;
-        }
-
-        .toggle-switch.active::after {
-            left: 24px;
-            background: #999;
-        }
-
-        .param-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        .param-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            width: 165px;
-        }
-
-        label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        body.light-mode label {
-            color: #888;
-        }
-
-        input[type="number"],
-        input[type="range"] {
-            font-family: 'Inter', sans-serif;
-        }
-
-        input[type="number"] {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #ffffff;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        body.light-mode input[type="number"] {
-            background: #f5f5f5;
-            border-color: #ddd;
-            color: #1a1a1a;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #666;
-            background: #333;
-        }
-
-        body.light-mode input[type="number"]:focus {
-            background: #fff;
-            border-color: #999;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #333;
-            color: #ffffff;
-            border: 1px solid #555;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            transition: all 0.2s ease;
-        }
-
-        body.light-mode button {
-            background: #e8e8e8;
-            color: #1a1a1a;
-            border-color: #ddd;
-        }
-
-        button:hover:not(:disabled) {
-            background: #404040;
-            border-color: #666;
-            transform: translateY(-1px);
-        }
-
-        body.light-mode button:hover:not(:disabled) {
-            background: #d8d8d8;
-            border-color: #999;
-        }
-
-        button:disabled {
-            background: #222;
-            border-color: #333;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        body.light-mode button:disabled {
-            background: #f0f0f0;
-            border-color: #ddd;
-        }
-
-        .control-section {
-            margin-bottom: 18px;
-            padding: 14px;
-            background: #1f1f1f;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        body.light-mode .control-section {
-            background: #f5f5f5;
-        }
-
-        .section-label {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            display: block;
-        }
-
-        body.light-mode .section-label {
-            color: #888;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            cursor: pointer;
-            height: 4px;
-            accent-color: #666;
-            background: #333;
-            border-radius: 2px;
-        }
-
-        body.light-mode input[type="range"] {
-            background: #ddd;
-            accent-color: #999;
-        }
-
-        .info {
-            padding: 14px;
-            background: #1f1f1f;
-            border-left: 3px solid #666;
-            font-size: 12px;
-            color: #aaa;
-            border-radius: 6px;
-            margin-top: 18px;
-            transition: all 0.3s ease;
-        }
-
-        body.light-mode .info {
-            background: #f5f5f5;
-            color: #666;
-            border-left-color: #999;
-        }
-
-        .zoom-hint {
-            font-size: 11px;
-            color: #666;
-            margin-top: 18px;
-            padding: 12px;
-            background: #1f1f1f;
-            border-radius: 6px;
-            text-align: center;
-            line-height: 1.6;
-            transition: all 0.3s ease;
-        }
-
-        body.light-mode .zoom-hint {
-            background: #f5f5f5;
-            color: #888;
-        }
-
-        .toggle-value {
-            font-size: 10px;
-            color: #666;
-            display: block;
-            margin-top: 6px;
-        }
-
-        body.light-mode .toggle-value {
-            color: #888;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; display: flex; height: 100vh; }
+        body.light-mode { background: #ffffff; color: #1a1a1a; }
+        #canvas { flex: 1; display: block; background: #1a1a1a; cursor: grab; }
+        body.light-mode #canvas { background: #ffffff; }
+        #canvas:active { cursor: grabbing; }
+        .sidebar { width: 420px; padding: 30px; background: #0f0f0f; border-left: 1px solid #333; overflow-y: auto; max-height: 100vh; }
+        body.light-mode .sidebar { background: #f8f8f8; border-left: 1px solid #ddd; }
+        .header { margin-bottom: 30px; }
+        .site-title { font-size: 14px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        body.light-mode .site-title { color: #666; }
+        .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; }
+        body.light-mode h1 { color: #1a1a1a; }
+        .top-controls { display: flex; gap: 12px; }
+        .icon-btn { width: 40px; height: 40px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        body.light-mode .icon-btn { background: #f0f0f0; border-color: #ddd; }
+        .icon-btn:hover { background: #333; transform: scale(1.05); }
+        body.light-mode .icon-btn:hover { background: #e0e0e0; }
+        .divider { height: 1px; background: #333; margin: 24px 0; }
+        body.light-mode .divider { background: #ddd; }
+        .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+        .param-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; }
+        body.light-mode label { color: #888; }
+        input[type="text"], input[type="range"] { font-family: 'Inter', sans-serif; }
+        input[type="text"] { background: #2a2a2a; border: 1px solid #444; color: #ffffff; padding: 8px 10px; border-radius: 6px; font-size: 12px; width: 100%; }
+        body.light-mode input[type="text"] { background: #f5f5f5; border-color: #ddd; color: #1a1a1a; }
+        input[type="text"]:focus { outline: none; border-color: #666; background: #333; }
+        body.light-mode input[type="text"]:focus { background: #fff; border-color: #999; }
+        button { width: 100%; padding: 12px; background: #333; color: #ffffff; border: 1px solid #555; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; transition: all 0.2s ease; }
+        body.light-mode button { background: #e8e8e8; color: #1a1a1a; border-color: #ddd; }
+        button:hover:not(:disabled) { background: #404040; border-color: #666; transform: translateY(-1px); }
+        body.light-mode button:hover:not(:disabled) { background: #d8d8d8; border-color: #999; }
+        button:disabled { background: #222; cursor: not-allowed; opacity: 0.5; }
+        .control-section { margin-bottom: 18px; padding: 14px; background: #1f1f1f; border-radius: 8px; }
+        body.light-mode .control-section { background: #f5f5f5; }
+        .section-label { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; display: block; }
+        body.light-mode .section-label { color: #888; }
+        input[type="range"] { width: 100%; cursor: pointer; height: 4px; accent-color: #666; background: #333; border-radius: 2px; }
+        body.light-mode input[type="range"] { background: #ddd; accent-color: #999; }
+        .info { padding: 14px; background: #1f1f1f; border-left: 3px solid #666; font-size: 12px; color: #aaa; border-radius: 6px; margin-top: 18px; }
+        body.light-mode .info { background: #f5f5f5; color: #666; border-left-color: #999; }
+        .toggle-value { font-size: 10px; color: #666; display: block; margin-top: 6px; }
+        body.light-mode .toggle-value { color: #888; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #0f0f0f; border: 1px solid #333; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        body.light-mode .modal-content { background: #f8f8f8; border-color: #ddd; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+        body.light-mode .modal-title { color: #1a1a1a; }
+        .preset-item { padding: 16px; background: #1f1f1f; border: 1px solid #333; border-radius: 8px; margin-bottom: 12px; }
+        body.light-mode .preset-item { background: #f5f5f5; border-color: #ddd; }
+        .preset-name { font-weight: 600; font-size: 13px; margin-bottom: 6px; color: #fff; }
+        body.light-mode .preset-name { color: #1a1a1a; }
+        .preset-desc { font-size: 11px; color: #777; margin-bottom: 12px; }
+        body.light-mode .preset-desc { color: #888; }
+        .preset-buttons { display: flex; gap: 10px; }
+        .preset-buttons button { flex: 1; padding: 8px; font-size: 10px; margin: 0; }
+        .modal-close { font-size: 28px; font-weight: bold; cursor: pointer; color: #888; float: right; line-height: 1; }
+        .modal-close:hover { color: #fff; }
+        body.light-mode .modal-close:hover { color: #1a1a1a; }
     </style>
 </head>
 <body>
@@ -405,7 +84,7 @@
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
                     </button>
-                    <button class="icon-btn mode-toggle" id="modeToggle" title="Toggle dark/light mode">
+                    <button class="icon-btn" id="modeToggle" title="Toggle dark/light mode">
                         <svg id="modeIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                         </svg>
@@ -414,28 +93,12 @@
             </div>
         </div>
 
-        <div class="toggle-row">
-            <span class="toggle-label">Scientific Terms</span>
-            <div id="scientificToggle" class="toggle-switch"></div>
-        </div>
-
-        <div class="toggle-row">
-            <span class="toggle-label">Rainbow Trail</span>
-            <div id="rainbowToggle" class="toggle-switch active"></div>
-        </div>
-
         <div class="divider"></div>
-
-        <div class="param-grid" id="paramContainer"> </div>
-
+        <button id="presetsBtn">Load Presets</button>
+        <div class="divider"></div>
+        <div class="param-grid" id="paramContainer"></div>
         <button id="simulateBtn">Simulate</button>
-
         <div class="divider"></div>
-
-        <div class="toggle-row">
-            <span class="toggle-label">Animation</span>
-            <div id="animToggle" class="toggle-switch active"></div>
-        </div>
 
         <div class="control-section">
             <label class="section-label">Animation Speed</label>
@@ -452,64 +115,41 @@
             <div>Active Rays: <strong id="trajCount">0</strong></div>
             <div style="margin-top: 8px;" id="statusText"></div>
         </div>
+    </div>
 
-
+    <div id="presetsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 class="modal-title">Common Simulations</h2>
+            <div id="presetsContainer"></div>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        const SCALE_BASE = 30;
-        const COLORS = ['#00d4ff', '#39ff14', '#ffff00', '#ffbe0b', '#8338ec', '#fb5607', '#3a86ff', '#06ffa5'];
-        
-        const parameterLabels = {
-            scientific: {
-                M: 'M',
-                r0: 'r₀',
-                phi0: 'φ₀',
-                rDot0: 'ṙ₀',
-                phiDot0: 'φ̇₀',
-                lambdaMax: 'λ_max',
-                stepInit: 'Δλ',
-                outputEvery: 'Output'
-            },
-            human: {
-                M: 'Mass',
-                r0: 'Start Radius',
-                phi0: 'Start Angle',
-                rDot0: 'Radial Velocity',
-                phiDot0: 'Angular Velocity',
-                lambdaMax: 'Simulation Length',
-                stepInit: 'Step Size',
-                outputEvery: 'Sample Rate'
+        const PRESETS = {
+            photonSphereOrbit: {
+                title: "Photon Sphere Orbit",
+                description: "Photon spiraling near the unstable photon sphere, completes ~3 orbits before escaping or falling in",
+                values: { M: 1.0, r0: 10.0, phi0: 0.0, rDot0: -0.32972897961810962501, phiDot0: 0.01935, lambdaMax: 1500.0, stepInit: 0.01, outputEvery: 10 }
             }
         };
 
-        const parameterDefaults = {
-            M: 1.0,
-            r0: 5.0,
-            phi0: 0.0,
-            rDot0: 0.0,
-            phiDot0: 0.192,
-            lambdaMax: 100.0,
-            stepInit: 0.01,
-            outputEvery: 10
-        };
-
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const SCALE_BASE = 30;
+        const COLORS = ['#00d4ff', '#39ff14', '#ffff00', '#ffbe0b', '#8338ec', '#fb5607', '#3a86ff', '#06ffa5'];
+        
+        const parameterDefaults = { M: 1.0, r0: 5.0, phi0: 0.0, rDot0: 0.0, phiDot0: 0.192, lambdaMax: 100.0, stepInit: 0.01, outputEvery: 10 };
         const parameterOrder = ['M', 'r0', 'phi0', 'rDot0', 'phiDot0', 'lambdaMax', 'stepInit', 'outputEvery'];
+        const parameterLabels = { M: 'Mass', r0: 'Start Radius', phi0: 'Start Angle', rDot0: 'Radial Velocity', phiDot0: 'Angular Velocity', lambdaMax: 'Simulation Length', stepInit: 'Step Size', outputEvery: 'Sample Rate' };
 
         let trajectories = [];
         let isLoading = false;
-        let animationEnabled = true;
         let animationProgress = {};
         let animationFrameId = null;
         let animationSpeed = 5;
         let trailLength = 30;
         let animationComplete = false;
-        let useScientificTerms = false;
-        let useRainbowTrail = true;
-        
         let panX = 0;
         let panY = 0;
         let zoom = 1;
@@ -518,106 +158,59 @@
 
         function initializeParameters() {
             const container = document.getElementById('paramContainer');
+            if (!container) { console.error('paramContainer not found!'); return; }
             container.innerHTML = '';
             
             parameterOrder.forEach(key => {
                 const div = document.createElement('div');
                 div.className = 'param-group';
-                const labelText = useScientificTerms ? parameterLabels.scientific[key] : parameterLabels.human[key];
+                div.innerHTML = `<label>${parameterLabels[key]}</label><input type="text" id="${key}" value="${parameterDefaults[key]}">`;
+                container.appendChild(div);
+            });
+        }
+
+        function initializePresets() {
+            const container = document.getElementById('presetsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            Object.entries(PRESETS).forEach(([key, preset]) => {
+                const div = document.createElement('div');
+                div.className = 'preset-item';
                 div.innerHTML = `
-                    <label>${labelText}</label>
-                    <input type="number" id="${key}" value="${parameterDefaults[key]}" step="0.01">
+                    <div class="preset-name">${preset.title}</div>
+                    <div class="preset-desc">${preset.description}</div>
+                    <div class="preset-buttons">
+                        <button onclick="window.loadPreset('${key}')">Load</button>
+                        <button onclick="window.copyPreset('${key}')">Copy</button>
+                    </div>
                 `;
                 container.appendChild(div);
             });
         }
+
+        window.loadPreset = function(presetKey) {
+            const preset = PRESETS[presetKey];
+            Object.entries(preset.values).forEach(([key, value]) => {
+                const input = document.getElementById(key);
+                if (input) input.value = value;
+            });
+            document.getElementById('presetsModal').classList.remove('show');
+            draw();
+        };
+
+        window.copyPreset = function(presetKey) {
+            const preset = PRESETS[presetKey];
+            const text = Object.entries(preset.values).map(([k, v]) => `${k}: ${v}`).join('\n');
+            navigator.clipboard.writeText(text);
+            alert('Copied!');
+        };
 
         function resizeCanvas() {
             canvas.width = window.innerWidth - 420;
             canvas.height = window.innerHeight;
             draw();
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const zoomSpeed = 0.03;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const oldZoom = zoom;
-            zoom += e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
-            zoom = Math.max(0.1, Math.min(zoom, 10));
-
-            const zoomFactor = zoom / oldZoom;
-            panX = x - (x - panX) * zoomFactor;
-            panY = y - (y - panY) * zoomFactor;
-
-            draw();
-        }, { passive: false });
-
-        canvas.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            dragStart = { x: e.clientX, y: e.clientY };
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                panX += e.clientX - dragStart.x;
-                panY += e.clientY - dragStart.y;
-                dragStart = { x: e.clientX, y: e.clientY };
-                draw();
-            }
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-            isDragging = false;
-        });
-
-        document.getElementById('homeBtn').addEventListener('click', () => {
-            panX = 0;
-            panY = 0;
-            zoom = 1;
-            draw();
-        });
-
-        const modeToggle = document.getElementById('modeToggle');
-        const modeIcon = document.getElementById('modeIcon');
-        modeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            if (document.body.classList.contains('light-mode')) {
-                modeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-            } else {
-                modeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-            }
-            localStorage.setItem('darkMode', !document.body.classList.contains('light-mode'));
-            draw();
-        });
-
-        document.getElementById('scientificToggle').addEventListener('click', function() {
-            useScientificTerms = !useScientificTerms;
-            this.classList.toggle('active');
-            initializeParameters();
-        });
-
-        document.getElementById('rainbowToggle').addEventListener('click', function() {
-            useRainbowTrail = !useRainbowTrail;
-            this.classList.toggle('active');
-            if (trajectories.length > 0) draw();
-        });
-
-        if (localStorage.getItem('darkMode') === 'false') {
-            document.body.classList.add('light-mode');
-            modeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-        }
-
-        initializeParameters();
 
         function getParams() {
             return {
@@ -641,115 +234,39 @@
             ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            const MInput = document.getElementById('M');
+            const M = MInput ? parseFloat(MInput.value) : 1.0;
+            const bhRadius = Math.max(5, 2 * M * SCALE);
             ctx.fillStyle = '#000000';
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 2 * SCALE, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, bhRadius, 0, Math.PI * 2);
             ctx.fill();
 
             trajectories.forEach((traj, idx) => {
                 if (!traj.trajectory || traj.trajectory.length === 0) return;
-
-                ctx.strokeStyle = COLORS[idx % COLORS.length];
+                ctx.strokeStyle = animationComplete ? '#ffff00' : COLORS[idx % COLORS.length];
                 ctx.lineWidth = 2;
-
-                if (animationComplete) {
-                    ctx.strokeStyle = '#ffff00';
-                    ctx.beginPath();
-                    traj.trajectory.forEach((point, i) => {
-                        const x = centerX + point.x * SCALE;
-                        const y = centerY + point.y * SCALE;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    });
-                    ctx.stroke();
-                } else if (animationEnabled && animationProgress[idx] !== undefined) {
-                    const pointsToDraw = Math.floor(traj.trajectory.length * animationProgress[idx]);
-
-                    if (pointsToDraw > 0) {
-                        const lastIdx = pointsToDraw - 1;
-                        const point = traj.trajectory[lastIdx];
-                        const x = centerX + point.x * SCALE;
-                        const y = centerY + point.y * SCALE;
-
-                        const rainbowColors = [
-                            {r: 255, g: 0, b: 0},
-                            {r: 255, g: 127, b: 0},
-                            {r: 255, g: 255, b: 0},
-                            {r: 0, g: 255, b: 0},
-                            {r: 0, g: 0, b: 255},
-                            {r: 75, g: 0, b: 130},
-                            {r: 148, g: 0, b: 211}
-                        ];
-
-                        for (let fade = 0; fade <= trailLength; fade++) {
-                            const prevIdx = lastIdx - fade;
-                            if (prevIdx < 0) continue;
-                            
-                            const prevPoint = traj.trajectory[prevIdx];
-                            const px = centerX + prevPoint.x * SCALE;
-                            const py = centerY + prevPoint.y * SCALE;
-
-                            const opacity = Math.max(0, 1 - fade / trailLength) * 0.8;
-                            let fillStyle;
-
-                            if (useRainbowTrail) {
-                                const rainbowIndex = Math.floor((fade / trailLength) * (rainbowColors.length - 1));
-                                const color = rainbowColors[rainbowIndex];
-                                fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
-                            } else {
-                                fillStyle = COLORS[idx % COLORS.length].replace('#', 'rgba(') + ', ' + opacity + ')';
-                            }
-                            
-                            ctx.fillStyle = fillStyle;
-                            ctx.beginPath();
-                            ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-
-                        ctx.fillStyle = COLORS[idx % COLORS.length].replace('#', 'rgba(') + ', 0.3)';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 8, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.fillStyle = COLORS[idx % COLORS.length];
-                        ctx.beginPath();
-                        ctx.arc(x, y, 5, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                } else {
-                    ctx.beginPath();
-                    traj.trajectory.forEach((point, i) => {
-                        const x = centerX + point.x * SCALE;
-                        const y = centerY + point.y * SCALE;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    });
-                    ctx.stroke();
-                }
+                ctx.beginPath();
+                traj.trajectory.forEach((point, i) => {
+                    const x = centerX + point.x * SCALE;
+                    const y = centerY + point.y * SCALE;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
             });
         }
 
         function animate() {
             let allDone = true;
-
             trajectories.forEach((traj, idx) => {
                 if (!traj.trajectory) return;
-                
-                if (animationProgress[idx] === undefined) {
-                    animationProgress[idx] = 0;
-                }
-
-                const increment = (animationSpeed / 100) * 0.016;
-                animationProgress[idx] += increment;
-
-                if (animationProgress[idx] < 1) {
-                    allDone = false;
-                }
+                if (animationProgress[idx] === undefined) animationProgress[idx] = 0;
+                animationProgress[idx] += (animationSpeed / 100) * 0.016;
+                if (animationProgress[idx] < 1) allDone = false;
                 animationProgress[idx] = Math.min(animationProgress[idx], 1);
             });
-
-            draw();
-
+            drawAnimated();
             if (!allDone) {
                 animationFrameId = requestAnimationFrame(animate);
             } else {
@@ -759,16 +276,70 @@
             }
         }
 
-        function startAnimation() {
-            if (animationEnabled && trajectories.length > 0) {
-                animationProgress = {};
-                animationComplete = false;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                animate();
-            } else {
-                animationComplete = true;
-                draw();
-            }
+        function drawAnimated() {
+            const isDark = !document.body.classList.contains('light-mode');
+            const centerX = canvas.width / 2 + panX;
+            const centerY = canvas.height / 2 + panY;
+            const SCALE = SCALE_BASE * zoom;
+
+            ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const MInput = document.getElementById('M');
+            const M = MInput ? parseFloat(MInput.value) : 1.0;
+            const bhRadius = Math.max(5, 2 * M * SCALE);
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, bhRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            trajectories.forEach((traj, idx) => {
+                if (!traj.trajectory || traj.trajectory.length === 0) return;
+
+                const pointsToDraw = Math.floor(traj.trajectory.length * animationProgress[idx]);
+                if (pointsToDraw === 0) return;
+
+                const rainbowColors = [
+                    {r: 255, g: 0, b: 0},
+                    {r: 255, g: 127, b: 0},
+                    {r: 255, g: 255, b: 0},
+                    {r: 0, g: 255, b: 0},
+                    {r: 0, g: 0, b: 255},
+                    {r: 75, g: 0, b: 130},
+                    {r: 148, g: 0, b: 211}
+                ];
+
+                // Draw main path
+                ctx.strokeStyle = COLORS[idx % COLORS.length];
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                for (let i = 0; i < pointsToDraw; i++) {
+                    const point = traj.trajectory[i];
+                    const x = centerX + point.x * SCALE;
+                    const y = centerY + point.y * SCALE;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Draw rainbow trail
+                const lastIdx = pointsToDraw - 1;
+                for (let fade = 0; fade <= trailLength && lastIdx - fade >= 0; fade++) {
+                    const prevIdx = lastIdx - fade;
+                    const prevPoint = traj.trajectory[prevIdx];
+                    const px = centerX + prevPoint.x * SCALE;
+                    const py = centerY + prevPoint.y * SCALE;
+
+                    const opacity = Math.max(0, 1 - fade / trailLength) * 0.8;
+                    const rainbowIndex = Math.floor((fade / trailLength) * (rainbowColors.length - 1));
+                    const color = rainbowColors[rainbowIndex];
+                    ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
         }
 
         async function simulate() {
@@ -789,7 +360,9 @@
                     trajectories = [data];
                     document.getElementById('trajCount').textContent = '1';
                     document.getElementById('statusText').textContent = 'Status: ' + data.status;
-                    startAnimation();
+                    animationProgress = {};
+                    animationComplete = false;
+                    animate();
                 } else {
                     alert('Error: ' + data.error);
                 }
@@ -801,27 +374,50 @@
             }
         }
 
-        document.getElementById('animToggle').addEventListener('click', function() {
-            animationEnabled = !animationEnabled;
-            this.classList.toggle('active');
-            if (trajectories.length > 0) {
-                startAnimation();
-            }
-        });
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-        document.getElementById('speedSlider').addEventListener('change', function() {
-            animationSpeed = parseInt(this.value);
-        });
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const oldZoom = zoom;
+            zoom += e.deltaY > 0 ? -0.03 : 0.03;
+            zoom = Math.max(0.1, Math.min(zoom, 10));
+            const zoomFactor = zoom / oldZoom;
+            panX = x - (x - panX) * zoomFactor;
+            panY = y - (y - panY) * zoomFactor;
+            draw();
+        }, { passive: false });
 
-        document.getElementById('trailSlider').addEventListener('input', function() {
-            trailLength = parseInt(this.value);
-            document.getElementById('trailValue').textContent = trailLength + ' points';
-            if (trajectories.length > 0) {
-                draw();
-            }
-        });
+        canvas.addEventListener('mousedown', (e) => { isDragging = true; dragStart = { x: e.clientX, y: e.clientY }; });
+        canvas.addEventListener('mousemove', (e) => { if (isDragging) { panX += e.clientX - dragStart.x; panY += e.clientY - dragStart.y; dragStart = { x: e.clientX, y: e.clientY }; draw(); } });
+        canvas.addEventListener('mouseup', () => { isDragging = false; });
+        canvas.addEventListener('mouseleave', () => { isDragging = false; });
 
+        document.getElementById('homeBtn').addEventListener('click', () => { panX = 0; panY = 0; zoom = 1; draw(); });
+        document.getElementById('modeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('darkMode', !document.body.classList.contains('light-mode')); draw(); });
+        document.getElementById('presetsBtn').addEventListener('click', () => { document.getElementById('presetsModal').classList.add('show'); });
+        document.getElementById('presetsModal').addEventListener('click', (e) => { if (e.target.id === 'presetsModal') document.getElementById('presetsModal').classList.remove('show'); });
+        document.querySelector('.modal-close').addEventListener('click', () => { document.getElementById('presetsModal').classList.remove('show'); });
         document.getElementById('simulateBtn').addEventListener('click', simulate);
+        document.getElementById('speedSlider').addEventListener('change', (e) => { animationSpeed = parseInt(e.target.value); });
+        document.getElementById('trailSlider').addEventListener('input', (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailValue').textContent = trailLength + ' points'; if (trajectories.length > 0) draw(); });
+
+        if (localStorage.getItem('darkMode') === 'false') document.body.classList.add('light-mode');
+
+        initializeParameters();
+        initializePresets();
+        draw();
+
+        const MInput = document.getElementById('M');
+        if (MInput) {
+            MInput.addEventListener('input', () => {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                draw();
+            });
+        }
     </script>
 </body>
 </html>
