@@ -3,10 +3,10 @@
 A numerical simulation of photon trajectories near a black hole using general relativity.
 
 ## Current Phase
-Phase 2 — Interactive web-based null geodesic solver in Schwarzschild spacetime.
+Phase 3 — Interactive web-based null geodesic solver in Kerr spacetime.
 
-# Interactive Visualization Finally Here!
-This version does includes a html file which you can run along with backend.py to make this run in your web browser with a python backend. The physics is now fully accurate and we now have a clean sleek UI! to run simply start open index.html in your browser and then run backend.py from the console! 
+# Kerr Spacetime Finally Implemented!
+This version adds an "a" parameter which controls the spin of the black hole providing effects such as frame dragging and more distortion in spacetime. I also added a button to show spacetime and see how it curves when parameters are changed. Some visuals are buggy however it works and is implemented within the webpage itself! 
 
 
 ## Core Features
@@ -17,9 +17,12 @@ This version does includes a html file which you can run along with backend.py t
 - Arbitrary photon directions
 - Capture vs escape detection
 - Interactive visualization
-
+- Kerr spacetime
 
 ## Planned Extensions
-- Kerr spacetime
+- Simulation with Carter Constant for calculation speedup
+- Ergosphere visualization
+- Physics explanation
+- Multiple photon simulation
 
 
