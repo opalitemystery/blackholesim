@@ -224,8 +224,9 @@
             
             const width = spacetimeCanvas.width;
             const height = spacetimeCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
+            const SCALE = SCALE_BASE * zoom;
+            const centerX = width / 2 + panX;
+            const centerY = height / 2 + panY;
             const scale = 50;
             
             spacetimeCtx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
@@ -244,7 +245,6 @@
             spacetimeCtx.arc(centerX, centerY, r_plus * scale, 0, 2*Math.PI);
             spacetimeCtx.stroke();
             
-           
             const gridLines = 6;
             for (let i = 1; i <= gridLines; i++) {
                 const r_grid = r_plus + (i * (8 - r_plus)) / gridLines;
@@ -380,6 +380,7 @@
             const SCALE = SCALE_BASE * zoom;
             const isDark = !document.body.classList.contains('light-mode');
 
+            // Only fill with background if spacetime is NOT enabled
             if (!spacetimeEnabled) {
                 ctx.fillStyle = isDark ? '#1a1a1a' : '#fff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -387,6 +388,7 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
 
+            // Draw black hole
             const M = parseFloat(document.getElementById('M')?.value || 1);
             const bhRadius = Math.max(5, 2 * M * SCALE);
             ctx.fillStyle = '#000';
@@ -394,6 +396,7 @@
             ctx.arc(centerX, centerY, bhRadius, 0, Math.PI * 2);
             ctx.fill();
 
+            // Draw trajectories
             trajectories.forEach((traj, idx) => {
                 if (!traj.trajectory || traj.trajectory.length === 0) return;
                 ctx.strokeStyle = COLORS[idx % COLORS.length];
