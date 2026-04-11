@@ -9,9 +9,35 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; display: flex; height: 100vh; }
         body.light-mode { background: #ffffff; color: #1a1a1a; }
-        #canvas { flex: 1; display: block; background: #1a1a1a; cursor: grab; }
+        
+        .main-container { flex: 1; display: flex; flex-direction: column; }
+        
+        .canvas-wrapper { position: relative; flex: 1; }
+        #spacetimeCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: transparent;
+            display: none;
+        }
+
+        body.spacetime-enabled #spacetimeCanvas { display: block; }
+        
+        #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; background: #1a1a1a; cursor: grab; z-index: 2; }
         body.light-mode #canvas { background: #ffffff; }
         #canvas:active { cursor: grabbing; }
+        
+        body.spacetime-enabled #canvas { 
+            background: transparent;
+            z-index: 3;
+        }
+        
+        .visualization-label { position: absolute; bottom: 12px; right: 12px; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; z-index: 20; pointer-events: none; }
+        body.light-mode .visualization-label { color: #999; }
+        
         .sidebar { width: 420px; padding: 30px; background: #0f0f0f; border-left: 1px solid #333; overflow-y: auto; max-height: 100vh; }
         body.light-mode .sidebar { background: #f8f8f8; border-left: 1px solid #ddd; }
         .header { margin-bottom: 30px; }
@@ -25,6 +51,8 @@
         body.light-mode .icon-btn { background: #f0f0f0; border-color: #ddd; }
         .icon-btn:hover { background: #333; transform: scale(1.05); }
         body.light-mode .icon-btn:hover { background: #e0e0e0; }
+        .icon-btn.active { background: #444; border-color: #666; }
+        body.light-mode .icon-btn.active { background: #d0d0d0; border-color: #999; }
         .divider { height: 1px; background: #333; margin: 24px 0; }
         body.light-mode .divider { background: #ddd; }
         .param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
@@ -71,13 +99,33 @@
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <div class="main-container">
+        <div class="canvas-wrapper">
+            <canvas id="spacetimeCanvas"></canvas>
+            <canvas id="canvas"></canvas>
+            <div class="visualization-label" id="visLabel"></div>
+        </div>
+    </div>
+    
     <div class="sidebar">
         <div class="header">
             <div class="site-title">Black Hole Simulator</div>
             <div class="title-row">
                 <h1>Black Hole</h1>
                 <div class="top-controls">
+                    <button class="icon-btn" id="spacetimeBtn" title="Toggle spacetime visualization">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                            <circle cx="16.24" cy="7.76" r="1"></circle>
+                            <circle cx="7.76" cy="16.24" r="1"></circle>
+                            <circle cx="16.24" cy="16.24" r="1"></circle>
+                            <circle cx="7.76" cy="7.76" r="1"></circle>
+                        </svg>
+                    </button>
                     <button class="icon-btn" id="homeBtn" title="Reset view">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -127,21 +175,33 @@
 
     <script>
         const PRESETS = {
-            photonSphereOrbit: {
-                title: "Photon Sphere Orbit",
-                description: "Photon spiraling near the unstable photon sphere, completes ~3 orbits before escaping or falling in",
-                values: { M: 1.0, r0: 10.0, phi0: 0.0, rDot0: -0.32972897961810962501, phiDot0: 0.01935, lambdaMax: 1500.0, stepInit: 0.01, outputEvery: 10 }
+            schwarzschildBasic: {
+                title: "Photon falls into photon sphere",
+                description: "non rotating black hole, photon starts at r = 10 and falls into photon sphere.",
+                values: { M: 1.0, a: 0.0, r0: 10.0, phi0: 0.0, rDot0: -0.32972897961810962501, phiDot0: 0.01935, lambdaMax: 150000, stepInit: 0.0001, outputEvery: 10 }
+            },
+            rotatingOrbit: {
+                title: "Photon orbits a rotating black hole",
+                description: "rotating black hole with a = 0.5, photon starts at r = 3.3667 and forms a circular orbit.",
+                values: { M: 1.0, a: 0.5, r0: 3.3667943640587, phi0: 0.0, rDot0: 0, phiDot0: 0.5, lambdaMax: 150, stepInit: 0.001, outputEvery: 10 }
+            },
+            rotatingStill: {
+                title: "Photon lies motionless",
+                description: "rotating black hole with a = 0.5, photon starts at r = 2.3472963554 and remains stationary.",
+                values: { M: 1.0, a: 0.5, r0: 2.3472963554, phi0: 0.0, rDot0: 0, phiDot0: 0, lambdaMax: 150, stepInit: 0.001, outputEvery: 10 }
             }
         };
 
+        const spacetimeCanvas = document.getElementById('spacetimeCanvas');
+        const spacetimeCtx = spacetimeCanvas.getContext('2d');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const SCALE_BASE = 30;
         const COLORS = ['#00d4ff', '#39ff14', '#ffff00', '#ffbe0b', '#8338ec', '#fb5607', '#3a86ff', '#06ffa5'];
         
-        const parameterDefaults = { M: 1.0, r0: 5.0, phi0: 0.0, rDot0: 0.0, phiDot0: 0.192, lambdaMax: 100.0, stepInit: 0.01, outputEvery: 10 };
-        const parameterOrder = ['M', 'r0', 'phi0', 'rDot0', 'phiDot0', 'lambdaMax', 'stepInit', 'outputEvery'];
-        const parameterLabels = { M: 'Mass', r0: 'Start Radius', phi0: 'Start Angle', rDot0: 'Radial Velocity', phiDot0: 'Angular Velocity', lambdaMax: 'Simulation Length', stepInit: 'Step Size', outputEvery: 'Sample Rate' };
+        const parameterDefaults = { M: 1.0, a: 0.0, r0: 5.0, phi0: 0.0, rDot0: 0.0, phiDot0: 0.192, lambdaMax: 100.0, stepInit: 0.01, outputEvery: 10 };
+        const parameterOrder = ['M', 'a', 'r0', 'phi0', 'rDot0', 'phiDot0', 'lambdaMax', 'stepInit', 'outputEvery'];
+        const parameterLabels = { M: 'Mass', a: 'Spin', r0: 'Start Radius', phi0: 'Start Angle', rDot0: 'Radial Velocity', phiDot0: 'Angular Velocity', lambdaMax: 'Simulation Length', stepInit: 'Step Size', outputEvery: 'Sample Rate' };
 
         let trajectories = [];
         let isLoading = false;
@@ -155,6 +215,88 @@
         let zoom = 1;
         let isDragging = false;
         let dragStart = { x: 0, y: 0 };
+        let spacetimeEnabled = false;
+
+        function drawKerrGridVisualization() {
+            const isDark = !document.body.classList.contains('light-mode');
+            const M = parseFloat(document.getElementById('M')?.value || 1.0);
+            const a = parseFloat(document.getElementById('a')?.value || 0.0) * M;
+            
+            const width = spacetimeCanvas.width;
+            const height = spacetimeCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const scale = 50;
+            
+            spacetimeCtx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
+            spacetimeCtx.clearRect(0, 0, width, height);
+            spacetimeCtx.fillRect(0, 0, width, height);
+            
+            spacetimeCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            const r_plus = M + Math.sqrt(Math.max(0, M*M - a*a));
+            spacetimeCtx.beginPath();
+            spacetimeCtx.arc(centerX, centerY, r_plus * scale, 0, 2*Math.PI);
+            spacetimeCtx.fill();
+            
+            spacetimeCtx.strokeStyle = 'rgba(255, 50, 50, 0.6)';
+            spacetimeCtx.lineWidth = 2;
+            spacetimeCtx.beginPath();
+            spacetimeCtx.arc(centerX, centerY, r_plus * scale, 0, 2*Math.PI);
+            spacetimeCtx.stroke();
+            
+           
+            const gridLines = 6;
+            for (let i = 1; i <= gridLines; i++) {
+                const r_grid = r_plus + (i * (8 - r_plus)) / gridLines;
+                const warp = 1 - Math.exp(-0.5 * (r_grid - r_plus) / (8 - r_plus));
+                const twistAmount = a / (r_grid * r_grid + a*a);
+                
+                spacetimeCtx.strokeStyle = `rgba(100, 100, 100, ${0.3 + 0.2 * (1 - warp)})`;
+                spacetimeCtx.lineWidth = 0.5;
+                
+                for (let theta = 0; theta < 2*Math.PI; theta += Math.PI / 16) {
+                    const twistAngle = theta + twistAmount * (Math.PI/2) * Math.sin(2*theta) * 3;
+                    
+                    const x = centerX + r_grid * scale * Math.cos(twistAngle);
+                    const y = centerY + r_grid * scale * Math.sin(twistAngle);
+                    
+                    if (theta === 0) {
+                        spacetimeCtx.beginPath();
+                        spacetimeCtx.moveTo(x, y);
+                    } else {
+                        spacetimeCtx.lineTo(x, y);
+                    }
+                }
+                spacetimeCtx.closePath();
+                spacetimeCtx.stroke();
+            }
+            
+            for (let theta = 0; theta < 2*Math.PI; theta += Math.PI / 8) {
+                spacetimeCtx.strokeStyle = 'rgba(100, 100, 100, 0.2)';
+                spacetimeCtx.lineWidth = 0.5;
+                spacetimeCtx.beginPath();
+                
+                for (let r_val = r_plus * 1.1; r_val <= 8; r_val += 0.3) {
+                    const twistAmount = a / (r_val * r_val + a*a);
+                    const twistAngle = theta + twistAmount * (Math.PI/2) * Math.sin(2*theta) * 3;
+                    
+                    const x = centerX + r_val * scale * Math.cos(twistAngle);
+                    const y = centerY + r_val * scale * Math.sin(twistAngle);
+                    
+                    if (r_val === r_plus * 1.1) {
+                        spacetimeCtx.moveTo(x, y);
+                    } else {
+                        spacetimeCtx.lineTo(x, y);
+                    }
+                }
+                spacetimeCtx.stroke();
+            }
+        }
+
+        function drawSpacetimeGrid() {
+            if (!spacetimeEnabled) return;
+            drawKerrGridVisualization();
+        }
 
         function initializeParameters() {
             const container = document.getElementById('paramContainer');
@@ -196,6 +338,7 @@
                 if (input) input.value = value;
             });
             document.getElementById('presetsModal').classList.remove('show');
+            if (spacetimeEnabled) drawSpacetimeGrid();
             draw();
         };
 
@@ -207,14 +350,20 @@
         };
 
         function resizeCanvas() {
+            spacetimeCanvas.width = window.innerWidth - 420;
+            spacetimeCanvas.height = window.innerHeight;
+            
             canvas.width = window.innerWidth - 420;
             canvas.height = window.innerHeight;
+            
+            if (spacetimeEnabled) drawSpacetimeGrid();
             draw();
         }
 
         function getParams() {
             return {
                 M: parseFloat(document.getElementById('M').value),
+                a: parseFloat(document.getElementById('a').value),
                 r0: parseFloat(document.getElementById('r0').value),
                 phi0: parseFloat(document.getElementById('phi0').value),
                 rDot0: parseFloat(document.getElementById('rDot0').value),
@@ -226,25 +375,28 @@
         }
 
         function draw() {
-            const isDark = !document.body.classList.contains('light-mode');
             const centerX = canvas.width / 2 + panX;
             const centerY = canvas.height / 2 + panY;
             const SCALE = SCALE_BASE * zoom;
+            const isDark = !document.body.classList.contains('light-mode');
 
-            ctx.fillStyle = isDark ? '#1a1a1a' : '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (!spacetimeEnabled) {
+                ctx.fillStyle = isDark ? '#1a1a1a' : '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
 
-            const MInput = document.getElementById('M');
-            const M = MInput ? parseFloat(MInput.value) : 1.0;
+            const M = parseFloat(document.getElementById('M')?.value || 1);
             const bhRadius = Math.max(5, 2 * M * SCALE);
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = '#000';
             ctx.beginPath();
             ctx.arc(centerX, centerY, bhRadius, 0, Math.PI * 2);
             ctx.fill();
 
             trajectories.forEach((traj, idx) => {
                 if (!traj.trajectory || traj.trajectory.length === 0) return;
-                ctx.strokeStyle = animationComplete ? '#ffff00' : COLORS[idx % COLORS.length];
+                ctx.strokeStyle = COLORS[idx % COLORS.length];
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 traj.trajectory.forEach((point, i) => {
@@ -309,7 +461,6 @@
                     {r: 148, g: 0, b: 211}
                 ];
 
-                // Draw main path
                 ctx.strokeStyle = COLORS[idx % COLORS.length];
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -323,7 +474,6 @@
                 }
                 ctx.stroke();
 
-                // Draw rainbow trail
                 const lastIdx = pointsToDraw - 1;
                 for (let fade = 0; fade <= trailLength && lastIdx - fade >= 0; fade++) {
                     const prevIdx = lastIdx - fade;
@@ -374,6 +524,11 @@
             }
         }
 
+        function updateVisLabel() {
+            const label = document.getElementById('visLabel');
+            label.textContent = spacetimeEnabled ? 'Spacetime + Geodesics' : 'Geodesics';
+        }
+
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -388,34 +543,91 @@
             const zoomFactor = zoom / oldZoom;
             panX = x - (x - panX) * zoomFactor;
             panY = y - (y - panY) * zoomFactor;
+            if (spacetimeEnabled) drawSpacetimeGrid();
             draw();
         }, { passive: false });
 
         canvas.addEventListener('mousedown', (e) => { isDragging = true; dragStart = { x: e.clientX, y: e.clientY }; });
-        canvas.addEventListener('mousemove', (e) => { if (isDragging) { panX += e.clientX - dragStart.x; panY += e.clientY - dragStart.y; dragStart = { x: e.clientX, y: e.clientY }; draw(); } });
+        canvas.addEventListener('mousemove', (e) => { 
+            if (isDragging) { 
+                panX += e.clientX - dragStart.x; 
+                panY += e.clientY - dragStart.y; 
+                dragStart = { x: e.clientX, y: e.clientY }; 
+                if (spacetimeEnabled) drawSpacetimeGrid();
+                draw();
+            } 
+        });
         canvas.addEventListener('mouseup', () => { isDragging = false; });
         canvas.addEventListener('mouseleave', () => { isDragging = false; });
 
-        document.getElementById('homeBtn').addEventListener('click', () => { panX = 0; panY = 0; zoom = 1; draw(); });
-        document.getElementById('modeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('darkMode', !document.body.classList.contains('light-mode')); draw(); });
-        document.getElementById('presetsBtn').addEventListener('click', () => { document.getElementById('presetsModal').classList.add('show'); });
-        document.getElementById('presetsModal').addEventListener('click', (e) => { if (e.target.id === 'presetsModal') document.getElementById('presetsModal').classList.remove('show'); });
-        document.querySelector('.modal-close').addEventListener('click', () => { document.getElementById('presetsModal').classList.remove('show'); });
+        document.getElementById('spacetimeBtn').addEventListener('click', function(e) {
+            spacetimeEnabled = !spacetimeEnabled;
+            document.body.classList.toggle('spacetime-enabled', spacetimeEnabled);
+            this.classList.toggle('active', spacetimeEnabled);
+            updateVisLabel();
+
+            if (spacetimeEnabled) drawSpacetimeGrid();
+            draw();
+        });
+
+        document.getElementById('homeBtn').addEventListener('click', () => { 
+            panX = 0; 
+            panY = 0; 
+            zoom = 1; 
+            if (spacetimeEnabled) drawSpacetimeGrid();
+            draw(); 
+        });
+
+        document.getElementById('modeToggle').addEventListener('click', () => { 
+            document.body.classList.toggle('light-mode'); 
+            localStorage.setItem('darkMode', !document.body.classList.contains('light-mode')); 
+            if (spacetimeEnabled) drawSpacetimeGrid();
+            draw(); 
+        });
+
+        document.getElementById('presetsBtn').addEventListener('click', () => { 
+            document.getElementById('presetsModal').classList.add('show'); 
+        });
+
+        document.getElementById('presetsModal').addEventListener('click', (e) => { 
+            if (e.target.id === 'presetsModal') document.getElementById('presetsModal').classList.remove('show'); 
+        });
+
+        document.querySelector('.modal-close').addEventListener('click', () => { 
+            document.getElementById('presetsModal').classList.remove('show'); 
+        });
+
         document.getElementById('simulateBtn').addEventListener('click', simulate);
-        document.getElementById('speedSlider').addEventListener('change', (e) => { animationSpeed = parseInt(e.target.value); });
-        document.getElementById('trailSlider').addEventListener('input', (e) => { trailLength = parseInt(e.target.value); document.getElementById('trailValue').textContent = trailLength + ' points'; if (trajectories.length > 0) draw(); });
+        document.getElementById('speedSlider').addEventListener('change', (e) => { 
+            animationSpeed = parseInt(e.target.value); 
+        });
+
+        document.getElementById('trailSlider').addEventListener('input', (e) => { 
+            trailLength = parseInt(e.target.value); 
+            document.getElementById('trailValue').textContent = trailLength + ' points'; 
+            if (trajectories.length > 0) draw(); 
+        });
 
         if (localStorage.getItem('darkMode') === 'false') document.body.classList.add('light-mode');
 
         initializeParameters();
         initializePresets();
+        updateVisLabel();
         draw();
 
         const MInput = document.getElementById('M');
+        const aInput = document.getElementById('a');
         if (MInput) {
             MInput.addEventListener('input', () => {
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                if (spacetimeEnabled) drawSpacetimeGrid();
                 draw();
+            });
+        }
+        if (aInput) {
+            aInput.addEventListener('input', () => {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                if (spacetimeEnabled) drawSpacetimeGrid();
             });
         }
     </script>
